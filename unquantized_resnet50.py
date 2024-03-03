@@ -167,6 +167,6 @@ with torch.no_grad():
 ########################################################################################################################
 # Printing the results for comparison
 # ----------------------------------------------------------------------------------------------------------------------
-print("TVM Unquantized model result: {}".format(tvm_cat_class))
+print("TVM unquantized model result: {}".format(tvm_cat_class))
 print("PyTorch unquantized model result: {}".format(pytorch_cat_class))
 ########################################################################################################################
