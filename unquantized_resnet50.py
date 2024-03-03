@@ -61,7 +61,7 @@ preprocess_image = transforms.Compose(
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ]
 )
 cat_image = preprocess_image(cat_image)
@@ -104,52 +104,69 @@ tvm_inference_result = tvm_runtime_module.get_output(0)
 ########################################################################################################################
 
 
-#####################################################################
-# Look up synset name
-# -------------------
-# Look up prediction top 1 index in 1000 class synset.
-synset_url = "".join(
+########################################################################################################################
+# Getting a dictionary where the key is a cat class id and the value is a synset (synonym set) that is comprised of
+# cat class names that are related
+# ----------------------------------------------------------------------------------------------------------------------
+synsets_url = "".join(
     [
         "https://raw.githubusercontent.com/Cadene/",
         "pretrained-models.pytorch/master/data/",
-        "imagenet_synsets.txt",
+        "imagenet_synsets.txt"
     ]
 )
-synset_name = "imagenet_synsets.txt"
-synset_path = download_testdata(synset_url, synset_name, module="data")
-with open(synset_path) as f:
-    synsets = f.readlines()
+synsets_filename = "imagenet_synsets.txt"
+synsets_path = download_testdata(synsets_url, synsets_filename, module="data")
+with open(synsets_path) as file:
+    synsets = file.readlines()
 
-synsets = [x.strip() for x in synsets]
+synsets = [synset.strip() for synset in synsets]
 splits = [line.split(" ") for line in synsets]
-key_to_classname = {spl[0]: " ".join(spl[1:]) for spl in splits}
+class_id_to_class_name = {split[0]: " ".join(split[1:]) for split in splits}
+########################################################################################################################
 
-class_url = "".join(
+
+########################################################################################################################
+# Getting a list of all cat class ids
+# ----------------------------------------------------------------------------------------------------------------------
+classes_url = "".join(
     [
         "https://raw.githubusercontent.com/Cadene/",
         "pretrained-models.pytorch/master/data/",
         "imagenet_classes.txt",
     ]
 )
-class_name = "imagenet_classes.txt"
-class_path = download_testdata(class_url, class_name, module="data")
-with open(class_path) as f:
-    class_id_to_key = f.readlines()
+classes_filename = "imagenet_classes.txt"
+classes_path = download_testdata(classes_url, classes_filename, module="data")
+with open(classes_path) as file:
+    class_ids = file.readlines()
+class_ids = [class_id.strip() for class_id in class_ids]
+########################################################################################################################
 
-class_id_to_key = [x.strip() for x in class_id_to_key]
 
-# Get top-1 result for TVM
-top1_tvm = np.argmax(tvm_inference_result.numpy()[0])
-tvm_class_key = class_id_to_key[top1_tvm]
+########################################################################################################################
+# Getting the cat class name that the model compiled with TVM returned as its inference result
+# ----------------------------------------------------------------------------------------------------------------------
+tvm_cat_class_id_index = np.argmax(tvm_inference_result.numpy()[0])
+tvm_cat_class_id = class_ids[tvm_cat_class_id_index]
+tvm_cat_class = class_id_to_class_name[tvm_cat_class_id]
+########################################################################################################################
 
-# Convert input to PyTorch variable and get PyTorch result for comparison
+
+########################################################################################################################
+# Executing the regular PyTorch model and getting the cat class name that is returned as inference result
+# ----------------------------------------------------------------------------------------------------------------------
 with torch.no_grad():
-    torch_img = torch.from_numpy(cat_image)
-    output = model(torch_img)
+    pytorch_inference_result = model(torch.from_numpy(cat_image))
+    pytorch_cat_class_id_index = np.argmax(pytorch_inference_result.numpy())
+    pytorch_cat_class_id = class_ids[pytorch_cat_class_id_index]
+    pytorch_cat_class = class_id_to_class_name[pytorch_cat_class_id]
+########################################################################################################################
 
-    # Get top-1 result for PyTorch
-    top1_torch = np.argmax(output.numpy())
-    torch_class_key = class_id_to_key[top1_torch]
 
-print("Relay top-1 id: {}, class name: {}".format(top1_tvm, key_to_classname[tvm_class_key]))
-print("Torch top-1 id: {}, class name: {}".format(top1_torch, key_to_classname[torch_class_key]))
+########################################################################################################################
+# Printing the results for comparison
+# ----------------------------------------------------------------------------------------------------------------------
+print("TVM Unquantized model result: {}".format(tvm_cat_class))
+print("PyTorch unquantized model result: {}".format(pytorch_cat_class))
+########################################################################################################################
