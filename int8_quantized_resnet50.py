@@ -81,20 +81,39 @@ relay_ir, inference_parameters = relay.frontend.from_pytorch(torch_scripted_mode
 
 
 ########################################################################################################################
+# Quantizing our model down to int8 precision
+# ----------------------------------------------------------------------------------------------------------------------
+# For (nbit_activation, dtype_activation) = (8, "int8"), a significant model precision drop is noticed by the
+# different results that TVM and PyTorch models return
+# For (nbit_activation, dtype_activation) = (16, "int16") TVM and PyTorch models return equal result
+# For (nbit_activation, dtype_activation) = (32, "int32") TVM and PyTorch models return equal result
+with relay.quantize.qconfig(
+    nbit_input=8,
+    nbit_weight=8,
+    nbit_activation=16,
+    dtype_input="int8",
+    dtype_weight="int8",
+    dtype_activation="int16"
+):
+    quantized_relay_ir = relay.quantize.quantize(relay_ir, inference_parameters)
+########################################################################################################################
+
+
+########################################################################################################################
 # Getting a TVM module that contains LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
 # machine code for the specified hardware device during execution - JIT (Just-In-Time) compilation
 # ----------------------------------------------------------------------------------------------------------------------
 compilation_target = tvm.target.Target("llvm", host="llvm")
 with tvm.transform.PassContext(opt_level=3):
-    tvm_compiled_module = relay.build(relay_ir, target=compilation_target, params=inference_parameters)
+    tvm_compiled_module = relay.build(quantized_relay_ir, target=compilation_target, params=inference_parameters)
 ########################################################################################################################
 
 
 ########################################################################################################################
-# Saving the compiled tvm module code to a file for comparison with quantized models to see if the data types in the
+# Saving the compiled tvm module code to a file for comparison with the unquantized model to see if the data types in
 # code actually changed after quantization
 # ----------------------------------------------------------------------------------------------------------------------
-with open("tvm_code_compiled_module_unquantized.txt", "w") as file:
+with open("tvm_code_compiled_module_int8_quantized.txt", "w") as file:
     file.write(tvm_compiled_module.get_lib().get_source())
 ########################################################################################################################
 
@@ -176,6 +195,6 @@ with torch.no_grad():
 ########################################################################################################################
 # Printing the results for comparison
 # ----------------------------------------------------------------------------------------------------------------------
-print("TVM unquantized model result: {}".format(tvm_cat_class))
+print("TVM int8 quantized model result: {}".format(tvm_cat_class))
 print("PyTorch unquantized model result: {}".format(pytorch_cat_class))
 ########################################################################################################################
