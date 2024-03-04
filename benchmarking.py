@@ -50,7 +50,7 @@ def get_torch_scripted_model(torch_model):
 # relay_ir - a Relay IR (Intermediate Representation) of our PyTorch model
 # inference_parameters - learned weights and biases of the model that are needed for inference
 def get_unquantized_relay_ir(torch_scripted_model):
-    input_name = "input"
+    input_name = "input_name"
     input_shape = [1, 3, 224, 224]
     shape_list = [(input_name, input_shape)]
     return relay.frontend.from_pytorch(torch_scripted_model, shape_list)
