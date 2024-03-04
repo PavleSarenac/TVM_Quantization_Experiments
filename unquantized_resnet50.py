@@ -91,7 +91,7 @@ with tvm.transform.PassContext(opt_level=3):
 
 
 ########################################################################################################################
-# Saving the compiled tvm module code to a file for comparison with quantized models to see if the data types in the
+# Saving the compiled tvm module code to a file for comparison with quantized models to see if data types in the
 # code actually changed after quantization
 # ----------------------------------------------------------------------------------------------------------------------
 with open("tvm_code_compiled_module_unquantized.txt", "w") as file:
