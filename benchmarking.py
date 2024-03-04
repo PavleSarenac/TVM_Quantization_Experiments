@@ -104,8 +104,8 @@ def get_quantized_relay_irs(unquantized_relay_ir, inference_parameters):
 ########################################################################################################################
 # Getting both unquantized relay ir and quantized relay irs in a list
 # ----------------------------------------------------------------------------------------------------------------------
-def get_all_relay_irs(torch_scripted_model, unquantized_relay_ir, inference_parameters):
-    return get_unquantized_relay_ir(torch_scripted_model) + \
+def get_all_relay_irs(unquantized_relay_ir, inference_parameters):
+    return [unquantized_relay_ir] + \
         get_quantized_relay_irs(unquantized_relay_ir, inference_parameters)
 ########################################################################################################################
 
@@ -190,8 +190,7 @@ def get_inference_times(tvm_runtime_module, inputs, hardware_device):
 def benchmark(tvm_runtime_modules, hardware_device):
     number_of_measurements = 20
     input_shape = [1, 3, 224, 224]
-    input_data_type = "float32"
-    inputs = [tvm.nd.array(torch.randn(input_shape).to(input_data_type)) for _ in range(number_of_measurements)]
+    inputs = [tvm.nd.array(torch.randn(input_shape).to(torch.float32)) for _ in range(number_of_measurements)]
 
     inference_times = []
     for i in range(len(tvm_runtime_modules)):
@@ -243,7 +242,7 @@ def main():
 
     # Getting TVM compiled modules
     unquantized_relay_ir, inference_parameters = get_unquantized_relay_ir(torch_scripted_model)
-    relay_irs = get_all_relay_irs(torch_scripted_model, unquantized_relay_ir, inference_parameters)
+    relay_irs = get_all_relay_irs(unquantized_relay_ir, inference_parameters)
     tvm_compiled_modules = get_tvm_compiled_modules(relay_irs, inference_parameters)
 
     # Getting TVM runtime modules
