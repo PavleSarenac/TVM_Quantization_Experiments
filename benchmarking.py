@@ -128,41 +128,23 @@ with relay.quantize.qconfig(
 
 
 ########################################################################################################################
-# Getting a TVM module that contains LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
+# Getting TVM modules that contain LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
 # machine code for the specified hardware device during execution - JIT (Just-In-Time) compilation
 # ----------------------------------------------------------------------------------------------------------------------
 compilation_target = tvm.target.Target("llvm", host="llvm")
 with tvm.transform.PassContext(opt_level=3):
     tvm_compiled_module_unquantized = relay.build(relay_ir, target=compilation_target, params=inference_parameters)
-########################################################################################################################
 
-
-########################################################################################################################
-# Getting a TVM module that contains LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
-# machine code for the specified hardware device during execution - JIT (Just-In-Time) compilation
-# ----------------------------------------------------------------------------------------------------------------------
 compilation_target = tvm.target.Target("llvm", host="llvm")
 with (tvm.transform.PassContext(opt_level=3)):
     tvm_compiled_module_int32_activations_quantized = \
         relay.build(int32_activations_quantized_relay_ir, target=compilation_target, params=inference_parameters)
-########################################################################################################################
 
-
-########################################################################################################################
-# Getting a TVM module that contains LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
-# machine code for the specified hardware device during execution - JIT (Just-In-Time) compilation
-# ----------------------------------------------------------------------------------------------------------------------
 compilation_target = tvm.target.Target("llvm", host="llvm")
 with (tvm.transform.PassContext(opt_level=3)):
     tvm_compiled_module_int16_activations_quantized = \
         relay.build(int16_activations_quantized_relay_ir, target=compilation_target, params=inference_parameters)
-########################################################################################################################
 
-
-########################################################################################################################
-# Getting a TVM module that contains LLVM IR (Intermediate Representation) that will later be compiled by LLVM into
-# machine code for the specified hardware device during execution - JIT (Just-In-Time) compilation
-# ----------------------------------------------------------------------------------------------------------------------
 compilation_target = tvm.target.Target("llvm", host="llvm")
 with (tvm.transform.PassContext(opt_level=3)):
     tvm_compiled_module_int8_activations_quantized = \
@@ -171,7 +153,7 @@ with (tvm.transform.PassContext(opt_level=3)):
 
 
 ########################################################################################################################
-# Executing our model on a desired hardware device using TVM runtime
+# Getting TVM runtime modules
 # ----------------------------------------------------------------------------------------------------------------------
 hardware_device = tvm.cpu(0)
 input_data_type = "float32"
@@ -201,10 +183,10 @@ number_of_measurements = 10
 number_of_runs_per_measurement = 10
 number_of_repeats_per_measurement = 3
 
-unquantized_inference_times = [0.3]
-quantized_int32_activation_inference_times = [0.7]
-quantized_int16_activation_inference_times = [0.8]
-quantized_int8_activation_inference_times = [0.1]
+unquantized_inference_times = []
+quantized_int32_activation_inference_times = []
+quantized_int16_activation_inference_times = []
+quantized_int8_activation_inference_times = []
 
 for i in range(number_of_measurements):
     tvm_time_evaluator = tvm_runtime_module_unquantized.module.time_evaluator(
