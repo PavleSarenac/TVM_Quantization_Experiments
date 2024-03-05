@@ -202,9 +202,18 @@ def benchmark(tvm_runtime_modules, hardware_device):
 
 
 ########################################################################################################################
-# Showing benchmarking results with a bar chart
+# Showing benchmarking results with bar charts
 # ----------------------------------------------------------------------------------------------------------------------
 def show_benchmarking_results(inference_times):
+    show_bar_chart_with_all_inference_times(inference_times)
+    show_bar_chart_with_average_inference_times(inference_times)
+########################################################################################################################
+
+
+########################################################################################################################
+# Showing a bar chart with all inference times
+# ----------------------------------------------------------------------------------------------------------------------
+def show_bar_chart_with_all_inference_times(inference_times):
     bar_width = 0.2
     bar_positions = np.arange(len(inference_times))
     models_legend = [
@@ -229,6 +238,14 @@ def show_benchmarking_results(inference_times):
     plt.xticks(bar_positions + (len(inference_times[0]) - 1) * bar_width / 2, labels)
 
     plt.show()
+########################################################################################################################
+
+
+########################################################################################################################
+# Showing a bar chart with average inference times
+# ----------------------------------------------------------------------------------------------------------------------
+def show_bar_chart_with_average_inference_times(inference_times):
+    pass
 ########################################################################################################################
 
 
