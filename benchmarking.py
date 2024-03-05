@@ -218,11 +218,11 @@ def show_benchmarking_results(inference_times):
         plt.bar(bar_positions + i * bar_width, inference_times[:, i], width=bar_width, label=models_legend[i])
 
     note_text = "Hardware device that was used: Intel(R) Core(TM) i7-10510U CPU"
-    plt.legend(title="Categories", loc="upper left")
+    plt.legend(loc="upper left")
     plt.annotate(note_text, xy=(0.5, -0.1), xycoords="axes fraction", ha="center", fontsize=8)
 
     plt.title("ResNet50 Machine Learning Model Compiled With TVM")
-    plt.xlabel("Inputs")
+    plt.xlabel("Randomized Dummy Inputs")
     plt.ylabel("Inference Time (seconds)")
 
     labels = ["#" + str(i + 1) for i in range(len(inference_times))]
