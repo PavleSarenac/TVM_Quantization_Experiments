@@ -185,7 +185,7 @@ def get_inference_times(tvm_runtime_module, inputs, hardware_device):
 
 
 ########################################################################################################################
-# Measure executiom times of the models and return results
+# Measuring execution times of the models and returning results
 # ----------------------------------------------------------------------------------------------------------------------
 def benchmark(tvm_runtime_modules, hardware_device):
     number_of_measurements = 20
@@ -202,7 +202,7 @@ def benchmark(tvm_runtime_modules, hardware_device):
 
 
 ########################################################################################################################
-# Show benchmarking results with a bar chart
+# Showing benchmarking results with a bar chart
 # ----------------------------------------------------------------------------------------------------------------------
 def show_benchmarking_results(inference_times):
     bar_width = 0.2
@@ -252,7 +252,7 @@ def main():
     # Getting benchmarking results
     inference_times = benchmark(tvm_runtime_modules, hardware_device)
 
-    # Show benchmarking results with a bar chart
+    # Showing benchmarking results with a bar chart
     show_benchmarking_results(inference_times)
 ########################################################################################################################
 
