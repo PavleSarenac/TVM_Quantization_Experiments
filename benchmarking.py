@@ -64,10 +64,10 @@ def get_quantized_relay_ir(unquantized_relay_ir, inference_parameters, quantizat
     with relay.quantize.qconfig(
             nbit_input=quantization_precision,
             nbit_weight=quantization_precision,
-            nbit_activation=quantization_precision,
+            nbit_activation=32,
             dtype_input=f"int{quantization_precision}" if quantization_precision != 1 else "bool",
             dtype_weight=f"int{quantization_precision}" if quantization_precision != 1 else "bool",
-            dtype_activation=f"int{quantization_precision}" if quantization_precision != 1 else "bool"
+            dtype_activation="int32"
     ):
         quantized_relay_ir = relay.quantize.quantize(unquantized_relay_ir, inference_parameters)
     return quantized_relay_ir
@@ -75,28 +75,16 @@ def get_quantized_relay_ir(unquantized_relay_ir, inference_parameters, quantizat
 
 
 ########################################################################################################################
-# Getting our model quantized with int16, int8 and int1 precisions
+# Getting our model quantized with int8 precision
 # ----------------------------------------------------------------------------------------------------------------------
 def get_quantized_relay_irs(unquantized_relay_ir, inference_parameters):
-    int16_quantized_relay_ir = get_quantized_relay_ir(
-        unquantized_relay_ir,
-        inference_parameters,
-        16
-    )
     int8_quantized_relay_ir = get_quantized_relay_ir(
         unquantized_relay_ir,
         inference_parameters,
         8
     )
-    int1_quantized_relay_ir = get_quantized_relay_ir(
-        unquantized_relay_ir,
-        inference_parameters,
-        1
-    )
     return [
-        int16_quantized_relay_ir,
-        int8_quantized_relay_ir,
-        int1_quantized_relay_ir
+        int8_quantized_relay_ir
     ]
 ########################################################################################################################
 
@@ -120,20 +108,12 @@ def get_tvm_compiled_modules(relay_irs, inference_parameters):
         tvm_compiled_module_unquantized = \
             relay.build(relay_irs[0], target=compilation_target, params=inference_parameters)
 
-        tvm_compiled_module_int16_quantized = \
-            relay.build(relay_irs[1], target=compilation_target, params=inference_parameters)
-
         tvm_compiled_module_int8_quantized = \
-            relay.build(relay_irs[2], target=compilation_target, params=inference_parameters)
-
-        tvm_compiled_module_int1_quantized = \
-            relay.build(relay_irs[3], target=compilation_target, params=inference_parameters)
+            relay.build(relay_irs[1], target=compilation_target, params=inference_parameters)
 
     return [
         tvm_compiled_module_unquantized,
-        tvm_compiled_module_int16_quantized,
-        tvm_compiled_module_int8_quantized,
-        tvm_compiled_module_int1_quantized
+        tvm_compiled_module_int8_quantized
     ]
 ########################################################################################################################
 
@@ -144,20 +124,12 @@ def get_tvm_compiled_modules(relay_irs, inference_parameters):
 def get_tvm_runtime_modules(tvm_compiled_modules, hardware_device):
     tvm_runtime_module_unquantized = graph_executor.GraphModule(tvm_compiled_modules[0]["default"](hardware_device))
 
-    tvm_runtime_module_int16_quantized = \
-        graph_executor.GraphModule(tvm_compiled_modules[1]["default"](hardware_device))
-
     tvm_runtime_module_int8_quantized = \
-        graph_executor.GraphModule(tvm_compiled_modules[2]["default"](hardware_device))
-
-    tvm_runtime_module_int1_quantized = \
-        graph_executor.GraphModule(tvm_compiled_modules[3]["default"](hardware_device))
+        graph_executor.GraphModule(tvm_compiled_modules[1]["default"](hardware_device))
 
     return [
         tvm_runtime_module_unquantized,
-        tvm_runtime_module_int16_quantized,
-        tvm_runtime_module_int8_quantized,
-        tvm_runtime_module_int1_quantized
+        tvm_runtime_module_int8_quantized
     ]
 ########################################################################################################################
 
@@ -218,9 +190,7 @@ def show_bar_chart_with_all_inference_times(inference_times):
     bar_positions = np.arange(len(inference_times))
     models_legend = [
         "Unquantized",
-        "Int16 Quantized",
-        "Int8 Quantized",
-        "Int1 Quantized"
+        "Int8 Quantized"
     ]
 
     for i in range(len(inference_times[0])):
@@ -247,17 +217,13 @@ def show_bar_chart_with_all_inference_times(inference_times):
 def show_bar_chart_with_average_inference_times(inference_times):
     labels = [
         "Unquantized",
-        "Int16 Quantized",
-        "Int8 Quantized",
-        "Int1 Quantized"
+        "Int8 Quantized"
     ]
 
     inference_times_transposed = inference_times.T
     average_inference_times = np.array([[
         inference_times_transposed[0].mean(),
-        inference_times_transposed[1].mean(),
-        inference_times_transposed[2].mean(),
-        inference_times_transposed[3].mean()
+        inference_times_transposed[1].mean()
     ]])
 
     for i in range(len(labels)):

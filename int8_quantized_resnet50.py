@@ -90,10 +90,10 @@ relay_ir, inference_parameters = relay.frontend.from_pytorch(torch_scripted_mode
 with relay.quantize.qconfig(
     nbit_input=8,
     nbit_weight=8,
-    nbit_activation=8,
+    nbit_activation=32,
     dtype_input="int8",
     dtype_weight="int8",
-    dtype_activation="int8"
+    dtype_activation="int32"
 ):
     quantized_relay_ir = relay.quantize.quantize(relay_ir, inference_parameters)
 ########################################################################################################################
