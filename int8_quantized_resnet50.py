@@ -87,14 +87,13 @@ relay_ir, inference_parameters = relay.frontend.from_pytorch(torch_scripted_mode
 # different results that TVM and PyTorch models return
 # For (nbit_activation, dtype_activation) = (16, "int16") TVM and PyTorch models return equal result
 # For (nbit_activation, dtype_activation) = (32, "int32") TVM and PyTorch models return equal result
-# Activations are quantized to int32 to preserve the model's accuracy as much as possible
 with relay.quantize.qconfig(
     nbit_input=8,
     nbit_weight=8,
-    nbit_activation=32,
+    nbit_activation=8,
     dtype_input="int8",
     dtype_weight="int8",
-    dtype_activation="int32"
+    dtype_activation="int8"
 ):
     quantized_relay_ir = relay.quantize.quantize(relay_ir, inference_parameters)
 ########################################################################################################################
