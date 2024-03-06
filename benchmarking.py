@@ -58,16 +58,17 @@ def get_unquantized_relay_ir(torch_scripted_model):
 
 
 ########################################################################################################################
-# Quantizing our model down to int8 precision with activations precision that is passed as parameter
+# Quantizing our model down to quantization precision that is passed as parameter
 # ----------------------------------------------------------------------------------------------------------------------
-def get_quantized_relay_ir(unquantized_relay_ir, inference_parameters, activations_precision):
+# Activations are quantized to int32 to preserve the model's accuracy as much as possible
+def get_quantized_relay_ir(unquantized_relay_ir, inference_parameters, quantization_precision):
     with relay.quantize.qconfig(
-            nbit_input=8,
-            nbit_weight=8,
-            nbit_activation=activations_precision,
-            dtype_input="int8",
-            dtype_weight="int8",
-            dtype_activation="int" + str(activations_precision)
+            nbit_input=quantization_precision,
+            nbit_weight=quantization_precision,
+            nbit_activation=32,
+            dtype_input=f"int{quantization_precision}" if quantization_precision != 1 else "bool",
+            dtype_weight=f"int{quantization_precision}" if quantization_precision != 1 else "bool",
+            dtype_activation="int32"
     ):
         quantized_relay_ir = relay.quantize.quantize(unquantized_relay_ir, inference_parameters)
     return quantized_relay_ir
@@ -78,25 +79,25 @@ def get_quantized_relay_ir(unquantized_relay_ir, inference_parameters, activatio
 # Quantizing our model down to int8 precision with int32, int16 and int8 activations precisions
 # ----------------------------------------------------------------------------------------------------------------------
 def get_quantized_relay_irs(unquantized_relay_ir, inference_parameters):
-    int32_activations_quantized_relay_ir = get_quantized_relay_ir(
-        unquantized_relay_ir,
-        inference_parameters,
-        32
-    )
-    int16_activations_quantized_relay_ir = get_quantized_relay_ir(
+    int16_quantized_relay_ir = get_quantized_relay_ir(
         unquantized_relay_ir,
         inference_parameters,
         16
     )
-    int8_activations_quantized_relay_ir = get_quantized_relay_ir(
+    int8_quantized_relay_ir = get_quantized_relay_ir(
         unquantized_relay_ir,
         inference_parameters,
         8
     )
+    int1_quantized_relay_ir = get_quantized_relay_ir(
+        unquantized_relay_ir,
+        inference_parameters,
+        1
+    )
     return [
-        int32_activations_quantized_relay_ir,
-        int16_activations_quantized_relay_ir,
-        int8_activations_quantized_relay_ir
+        int16_quantized_relay_ir,
+        int8_quantized_relay_ir,
+        int1_quantized_relay_ir
     ]
 ########################################################################################################################
 
